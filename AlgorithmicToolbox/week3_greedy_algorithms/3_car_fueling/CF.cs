@@ -12,38 +12,61 @@ namespace CarFueling
             var maxDistanceOnFullTank = Console.ReadLine();
             var numberOfStations = Console.ReadLine();
             var stationDistancesString = Console.ReadLine();
-            var stationDistancesArray = stationDistancesString.Split(' ').Select(d => int.Parse(d)).ToList();
-            var visitedStations = new List<int>(int.Parse(numberOfStations));
             var result = 0;
-            var currentDistance = 0;
-            var lastStation = 0;
-            // for(var i = 0; i < int.Parse(numberOfStations); i++)
-            // {
-                
-            // }
+            var stationDistancesList = stationDistancesString.Split(' ').Select(d => int.Parse(d)).ToList();
+            //stationDistancesList.Add(int.Parse(totalWay));
+            try
+            {
+                var distances = CountDistancesBetweenStations(stationDistancesList, int.Parse(totalWay), int.Parse(maxDistanceOnFullTank));
+                result = CountStopsNumber(distances, int.Parse(maxDistanceOnFullTank));
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"{ex}");
+                result = -1;
+            }
+            
             Console.WriteLine($"{result}");
         }
 
-        static int CountNextStation(List<int> stations, int currentStation, int maxDistance, int numberOfStations)
+        static List<int> CountDistancesBetweenStations(List<int> stations, int totalWay, int fullTankDistance)
         {
-            var currentDistance = 0;
-            var lastStation = 0;
-            for (var i = currentStation; i <= numberOfStations; i++)
+            var result = new List<int>(stations.Count()+1);
+            var localStations = new List<int>(stations);
+            localStations.Insert(0,0);
+            localStations.Add(totalWay);
+            for(var i = 0; i < localStations.Count() - 1; i++)
             {
-                if (currentDistance + stations[i] < maxDistance)
+                Console.WriteLine($"{i} {localStations[i]} {localStations[i+1]}");
+                var distance = localStations[i] - localStations[i+1];
+                if (distance > fullTankDistance)
                 {
-                    currentDistance += stations[i];
-                    lastStation = i;
+                    throw new Exception();
                 }
+                result.Add(localStations[i] - localStations[i+1]);                
             }
-            if (currentDistance == 0 && lastStation == 0)
+            return result;
+        }
+
+        static int CountStopsNumber(List<int> stations, int maxDistance)
+        {
+            var stopsCounter = 0;
+            var i = 0;
+            while(i < stations.Count())
             {
-                return -1;
-            }
-            else
-            {
-                return lastStation;
-            }
+                var j = i;
+                var currentDistance = stations[j];
+                while(currentDistance<=maxDistance && j < stations.Count())
+                {
+                    j++;
+                    currentDistance += stations[j];
+                }
+                if (currentDistance > maxDistance)
+                {
+                    stopsCounter++;
+                }
+            };
+            return stopsCounter;
         }
     }
 }
