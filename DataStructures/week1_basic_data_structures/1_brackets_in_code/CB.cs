@@ -32,12 +32,12 @@ namespace CheckBrackets
             // }
         }
 
-        public static string Count(string input)
+        private static string Count(string input)
         {
             var stack = new MyStack();
             for(var i = 0; i < input.Length; i++)
             {
-                if (input[i].Equals('}') || input[i].Equals(']') || input[i].Equals(')'))
+                if (input[i] == '}' || input[i] == ']' || input[i] == ')')
                 {
                     if (stack.IsEmpty())
                     {
@@ -45,7 +45,7 @@ namespace CheckBrackets
                     }
                     else
                     {
-                        if(!AppropriateBracket(input[i], stack))
+                        if (!AppropriateBracket(input[i], stack))
                         {
                             return (i + 1).ToString();
                         }
@@ -55,16 +55,12 @@ namespace CheckBrackets
                         }
                     }
                 }
-                else if (input[i].Equals('{') || input[i].Equals('[') || input[i].Equals('('))
+                else if (input[i] == '{' || input[i] == '[' || input[i] == '(')
                 {
                     stack.Push(input[i], i);
                 }
             }
-            if (!stack.IsEmpty())
-            {
-                return (stack.Top().Index + 1).ToString();
-            }
-            return "Success";
+            return !stack.IsEmpty() ? (stack.Top().Index + 1).ToString() : "Success";
         }
 
         private static bool AppropriateBracket(char newBracket, MyStack stack)
@@ -98,10 +94,7 @@ namespace CheckBrackets
             public StackItem Pop()
             {
                 var result = Top();
-                if (Last != null)
-                {                    
-                    Last = Last.Previous;
-                }
+                Last = Last?.Previous;
                 return result;
             }
 
