@@ -11,23 +11,65 @@ namespace TreeHeight
         {
             var nodeNumber = Console.ReadLine();
             var nodes = Console.ReadLine()?.Split(' ').Select(int.Parse).ToArray();
-            var result = CountHeight(BuildTree(nodes));
+            var result = Count2(BuildTree(nodes));
             Console.WriteLine(result);
+
+            //For tests
+            // var dir = new DirectoryInfo("tests");
+            // var allFiles = dir.GetFiles();
+            // for(var i = 0; i < allFiles.Length; i+=2)
+            // {
+            //     var result = string.Empty;
+            //     var answer = string.Empty;
+            //     using (var sr = new StreamReader(allFiles[i].FullName))
+            //     {
+            //         var nodeNumber = sr.ReadLine();
+            //         var nodes = sr.ReadLine()?.Split(' ').Select(int.Parse).ToArray();
+            //         var root = BuildTree(nodes);
+            //         Stopwatch stopWatch = new Stopwatch();
+            //         stopWatch.Start();
+            //         result = Count2(root).ToString();
+            //         stopWatch.Stop();
+            //         Console.WriteLine($"stopWatch.Elapsed: {stopWatch.Elapsed}");
+            //     }
+            //     using (var sr = new StreamReader(allFiles[i+1].FullName))
+            //     {
+            //         answer = sr.ReadLine();
+            //     }
+            //     if (!result.Equals(result))
+            //     {
+            //         Console.WriteLine($"Test {allFiles[i]} failed");
+            //     }
+            //     else
+            //     {
+            //         Console.WriteLine($"Test {allFiles[i]} succeeded");
+            //     }
+            // }
         }
 
-        private static int CountHeight(TreeItem treeRoot)
+        private static int Count2(TreeItem treeRoot)
         {
-            var currentHeight = 1;
-            var maxChildHeight = 0;
-            foreach (var t in treeRoot.Children)
+            var height = 0;
+            var queue = new Queue<TreeItem>();
+            queue.Enqueue(treeRoot);
+            while(true)
             {
-                var newMax = CountHeight(t);
-                if (newMax > maxChildHeight)
+                var currentLevelNodes = queue.Count;
+                if (currentLevelNodes == 0)
                 {
-                    maxChildHeight = newMax;
+                    return height;
                 }
-            }
-            return currentHeight += maxChildHeight;
+                height++;
+                while(currentLevelNodes > 0)
+                {
+                    var item = queue.Dequeue();
+                    foreach(var child in item.Children)
+                    {
+                        queue.Enqueue(child);
+                    }
+                    currentLevelNodes--;
+                }
+            }                        
         }
 
         private static TreeItem BuildTree(int[] nodes)
