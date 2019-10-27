@@ -10,52 +10,64 @@ namespace NetworkSimulation
     {        
         public static void Main()
         {
-            var commonInput = Console.ReadLine().Split(' ').Select(int.Parse).ToList();
-            var bufferSize = commonInput.ElementAt(0);
-            var packetQuantity = commonInput.ElementAt(1);
-            if (packetQuantity <= 0)
+            var runAgain = "y";
+            while (runAgain != "n")
             {
-                return;
-            }
-            var packets = new Queue<Packet>(packetQuantity);
-            var finishTmes = new List<int>(bufferSize);
-            for (var i = 0; i < packetQuantity; i++)
-            {
-                packets.Enqueue(new Packet(Console.ReadLine()));
-            }
+                var commonInput = Console.ReadLine().Split(' ').Select(int.Parse).ToList();
+                var bufferSize = commonInput.ElementAt(0);
+                var packetQuantity = commonInput.ElementAt(1);
+                if (packetQuantity <= 0)
+                {
+                    return;
+                }
+                var packets = new Queue<Packet>(packetQuantity);
+                var finishTimes = new List<int>(bufferSize + 1);
+                for (var i = 0; i < packetQuantity; i++)
+                {
+                    packets.Enqueue(new Packet(Console.ReadLine()));
+                }
 
-            PrintStartTimes(bufferSize, finishTmes, packets);
+                PrintStartTimes(bufferSize, finishTimes, packets);
+                runAgain = Console.ReadLine();
+            }
+            
         }
 
-        private static void PrintStartTimes(int bufferSize, List<int> finishTmes, Queue<Packet> packets)
+        private static void PrintStartTimes(int bufferSize, List<int> finishTimes, Queue<Packet> packets)
         {
-            var startTime = 0;
             while (packets.Any())
             {
                 var currentPacket = packets.Dequeue();
-                if (!finishTmes.Any())
+                if (!finishTimes.Any())
                 {
-                    Console.WriteLine(currentPacket.ArrivalTime);
+                    finishTimes.Add(currentPacket.ArrivalTime);
+                    finishTimes.Add(currentPacket.ProcessingTime);
                 }
                 else
                 {
-                    for(var i = 0; i < finishTmes.Count; i++)
+                    //todo while-loop
+                    for(var i = 1; i < finishTimes.Count; i++)
                     {
-                        if (finishTmes[i] < currentPacket.ArrivalTime)
+                        if (finishTimes[i] <= currentPacket.ArrivalTime)
                         {
-                            Console.WriteLine(finishTmes[i]);
-                            finishTmes.Remove(finishTmes[i]);
+                            Console.WriteLine(finishTimes[i-1]);
+                            finishTimes[i - 1] = finishTimes[i]; 
+                            finishTimes.Remove(finishTimes[i]);
                         }
                     }
-                    if (finishTmes.Count < bufferSize)
+                    if (finishTimes.Count <= bufferSize)
                     {
-                        finishTmes.Add(finishTmes.Last() + currentPacket.ProcessingTime);
+                        finishTimes.Add(finishTimes.Last() + currentPacket.ProcessingTime);
                     }
                     else
                     {
                         Console.WriteLine(-1);
                     }
                 }
+            }
+            for(var i = 1; i < finishTimes.Count; i++)
+            {
+                Console.WriteLine(finishTimes[i]);
             }
         }
 
