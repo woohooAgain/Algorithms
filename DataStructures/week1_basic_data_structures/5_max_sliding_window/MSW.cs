@@ -1,8 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace NetworkSimulation
 {
@@ -10,125 +9,106 @@ namespace NetworkSimulation
     {
         public static void Main()
         {
-            var inputArrayLength = int.Parse(Console.ReadLine());
-            var numbers = Console.ReadLine().Split(' ').Select(int.Parse).ToArray();
-            var windowSize = int.Parse(Console.ReadLine());
+            var inputArrayLength = int.Parse(Console.ReadLine() ?? throw new ArgumentException());
+            var numbers = Console .ReadLine()?.Split(' ').Select(int.Parse).ToArray();
+            var windowSize = int.Parse(Console.ReadLine() ?? throw new ArgumentException());
             SlideWindow(inputArrayLength, numbers, windowSize);
         }
 
         private static void SlideWindow(int inputArrayLength, int[] numbers, int windowSize)
         {
-            // var mainStack = new MyStack(windowSize);
-            // var tempStack = new Stack<int>(windowSize + 1);
-            // for(var i = 0; i < windowSize; i++)
-            // {
-            //     mainStack.Push(numbers[i]);
-            // }
-            // mainStack.Max();
-            // for(var i = windowSize; i < inputArrayLength; i++)
-            // {
-            //     tempStack.Push(numbers[i]);
-            //     while(!mainStack.IsEmpty())
-            //     {
-            //         tempStack.Push(mainStack.Pop());
-            //     }
-            //     tempStack.Pop();
-            //     while(tempStack.Any())
-            //     {
-            //         mainStack.Push(tempStack.Pop());
-            //     }
-            //     mainStack.Max();
-            // }
+            var sb = new StringBuilder(250000);
             var queue = new MyQueue(windowSize);
             for(var i = 0; i < windowSize; i++)
             {
                 queue.Enqueue(numbers[i]);
             }
-            queue.Max();
+            sb.Append(queue.Max());
+            sb.Append(' ');
             for(var i = windowSize; i < inputArrayLength; i++)
             {
+                queue.Dequeue();
                 queue.Enqueue(numbers[i]);
-                queue.Max();
+                sb.Append(queue.Max());
+                sb.Append(' ');
             }
+            Console.WriteLine(sb.ToString());
         }
 
-        internal class MyQueue
+        private class MyQueue
         {
-            private MyStack FirstStack;
-            private MyStack SecondStack;
+            private readonly MyStack _firstStack;
+            private readonly MyStack _secondStack;
 
             public MyQueue(int size)
             {
-                FirstStack = new MyStack(size + 1);
-                SecondStack = new MyStack(size + 1);
+                _firstStack = new MyStack(size);
+                _secondStack = new MyStack(size);
             }
 
             public void Enqueue(int newValue)
             {
-                SecondStack.Push(newValue);
-                while(!FirstStack.IsEmpty())
-                {
-                    SecondStack.Push(FirstStack.Pop());
-                }
-                SecondStack.Pop();
-                MyStack tempStack;
-                tempStack = FirstStack;
-                FirstStack = SecondStack;
-                SecondStack = tempStack;
-                tempStack = null;
+                _firstStack.Push(newValue);
             }
 
-            public void Max()
+            public int Dequeue()
             {
-                FirstStack.Max();
+                if (!_secondStack.IsEmpty()) return _secondStack.Pop();
+                while(!_firstStack.IsEmpty())
+                {
+                    _secondStack.Push(_firstStack.Pop());
+                }
+
+                return _secondStack.Pop();
+            }
+
+            public int Max()
+            {
+                var firstMax = _firstStack.Max();
+                var secondMax = _secondStack.Max();
+                return firstMax > secondMax ?  firstMax : secondMax;
             }
         }
 
-        internal class MyStack
+        private class MyStack
         {
-            private Stack<int> OriginalStack;
-            private Stack<int> MaxElementStack;
-
-            public MyStack()
-            {
-                OriginalStack = new Stack<int>();
-                MaxElementStack = new Stack<int>();
-            }
+            private readonly Stack<int> _originalStack;
+            private readonly Stack<int> _maxElementStack;
 
             public MyStack(int size)
             {
-                OriginalStack = new Stack<int>(size);
-                MaxElementStack = new Stack<int>(size);
+                _originalStack = new Stack<int>(size);
+                _maxElementStack = new Stack<int>(size);
             }
 
             public void Push(int newValue)
             {
-                if (!MaxElementStack.Any())
+                if (!_maxElementStack.Any())
                 {
-                    MaxElementStack.Push(newValue);
+                    _maxElementStack.Push(newValue);
                 }
                 else
                 {
-                    var currentMax = MaxElementStack.Peek();
-                    MaxElementStack.Push(currentMax > newValue ? currentMax : newValue);
+                    var currentMax = _maxElementStack.Peek();
+                    _maxElementStack.Push(currentMax > newValue ? currentMax : newValue);
                 }
-                OriginalStack.Push(newValue);
+                _originalStack.Push(newValue);
             }
 
             public int Pop()
             {
-                MaxElementStack.Pop();
-                return OriginalStack.Pop();
+                _maxElementStack.Pop();
+                return _originalStack.Pop();
             }
 
-            public void Max()
+            public int Max()
             {
-                Console.WriteLine(MaxElementStack.Peek());
+                return _maxElementStack.Any() ? _maxElementStack.Peek() : 0;
             }
 
             public bool IsEmpty()
             {
-                return !OriginalStack.Any();
+                return !_originalStack.Any();
             }
         }
     }
