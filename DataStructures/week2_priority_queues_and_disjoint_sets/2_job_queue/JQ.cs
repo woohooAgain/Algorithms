@@ -17,30 +17,42 @@ namespace Heap
             var threadAndJobs = Console.ReadLine().Split(' ').Select(long.Parse).ToList();
             var threadsQuantity = threadAndJobs.First();
             var jobsQuantity = threadAndJobs.Last();
-            var jobsDuration = Console.ReadLine()?.Split(' ').Select(long.Parse).ToArray();
+            var jobsDuration = Console.ReadLine()?.Split(' ').Select(int.Parse).ToArray();
             Simulate(threadsQuantity, jobsDuration);
         }
 
-        private static void Simulate(long threadsQuantity, long[] jobsDuration)
+        private static void Simulate(long threadsQuantity, int[] jobsDuration)
         {
-            var freeThreads = new MyPriorityQueue(threadsQuantity);
-            var busyThreads = new MyPriorityQueue(threadsQuantity);
-            var jobs = new Queue<long>(jobsDuration);
+            //var freeThreads = new MyPriorityQueue(threadsQuantity);
+            //var busyThreads = new MyPriorityQueue(threadsQuantity);
+            var threads = new MyPriorityQueue(threadsQuantity);
+            var jobs = new Queue<int>(jobsDuration);
+
+            while(jobs.Any())
+            {
+                var newJobDuration = jobs.Dequeue();
+                var activeThread = threads.GetThread();
+                Console.WriteLine($"{activeThread.Index} {activeThread.ReleaseTime}");
+                activeThread.ReleaseTime = newJobDuration;
+                threads.SiftDown(0);
+            }
         }
 
 
-        //todo: Add model for thread (index and time, when thread will be free (will finish current work))
-        //todo: Add insert and extractMax methods
-        //todo: In while loop (while there are jobs) if there free threads give them job (move from free queue to busy queue), check if any threads have finished there work
-        //todo: don't forget about zero-time jobs and several threads released at the same time
+        //todo: one queue; priority counts as sum of index and release time;
+        //todo: add logics for comparison (at first release times, if equal indexes)
         public class MyPriorityQueue
         {
             private long _size;
-            private long[] _heap;
+            private MyThread[] _heap;
 
             public MyPriorityQueue(long size)
             {
-                _heap = new long[size];
+                _heap = new MyThread[size];
+                for(var i = 0; i > size; i++)
+                {
+                    _heap[i] = new MyThread(i);
+                }
             }
 
             public void Insert()
@@ -58,10 +70,11 @@ namespace Heap
                         return;
                     }
 
-                    if (_heap[parentIndex] > _heap[i])
+                    //change comparison
+                    if (_heap[parentIndex].CountPriority() > _heap[i].CountPriority())
                     {
                         SwapCounter++;
-                        StringsToPrint2.AppendLine($"{parentIndex} {i}");
+                        //StringsToPrint2.AppendLine($"{parentIndex} {i}");
                         var temp = _heap[parentIndex];
                         _heap[parentIndex] = _heap[i];
                         _heap[i] = temp;
@@ -73,19 +86,21 @@ namespace Heap
                 }
             }
 
-            private void SiftDown(long i)
+            public void SiftDown(long i)
             {
                 while (true)
                 {
                     var minIndex = i;
                     var l = GetLeftChildIndex(i);
-                    if (l < _heap.Length && _heap[l] < _heap[minIndex])
+                    //change comparison
+                    if (l < _heap.Length && _heap[l].CountPriority() < _heap[minIndex].CountPriority())
                     {
                         minIndex = l;
                     }
 
                     var r = GetRightChildIndex(i);
-                    if (r < _heap.Length && _heap[r] < _heap[minIndex])
+                    //change comparison
+                    if (r < _heap.Length && _heap[r].CountPriority() < _heap[minIndex].CountPriority())
                     {
                         minIndex = r;
                     }
@@ -103,6 +118,11 @@ namespace Heap
 
                     break;
                 }
+            }
+
+            public MyThread GetThread()
+            {
+                return _heap[0];
             }
 
             private long GetLeftChildIndex(long i)
@@ -126,31 +146,46 @@ namespace Heap
             }
 
 
-            private bool IsHeap()
+            //private bool IsHeap()
+            //{
+            //    var elementsQuantity = _heap.Length;
+            //    for (var i = 0; i < elementsQuantity; i++)
+            //    {
+            //        var l = 2 * i + 1;
+            //        if (l <= elementsQuantity - 1)
+            //        {
+            //            if (_heap[i] > _heap[l])
+            //            {
+            //                return false;
+            //            }
+            //        }
+
+            //        var r = l + 1;
+            //        if (r <= elementsQuantity - 1)
+            //        {
+            //            if (_heap[i] > _heap[r])
+            //            {
+            //                return false;
+            //            }
+            //        }
+            //    }
+
+            //    return true;
+            //}
+        }
+
+        public class MyThread
+        {
+            public MyThread(int index)
             {
-                var elementsQuantity = _heap.Length;
-                for (var i = 0; i < elementsQuantity; i++)
-                {
-                    var l = 2 * i + 1;
-                    if (l <= elementsQuantity - 1)
-                    {
-                        if (_heap[i] > _heap[l])
-                        {
-                            return false;
-                        }
-                    }
+                Index = index;
+            }
+            public int Index { get; set; }
+            public int ReleaseTime { get; set; }
 
-                    var r = l + 1;
-                    if (r <= elementsQuantity - 1)
-                    {
-                        if (_heap[i] > _heap[r])
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
+            public int CountPriority()
+            {
+                return Index + ReleaseTime;
             }
         }
     }
