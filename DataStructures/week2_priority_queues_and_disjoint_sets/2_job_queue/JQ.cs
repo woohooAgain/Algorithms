@@ -1,46 +1,34 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace Heap
 {
     public static class Program
     {
-        private static List<string> StringsToPrint { get; set; }
-        private static StringBuilder StringsToPrint2 { get; set; }
-        private static long SwapCounter { get; set; }
-
         public static void Main()
         {
-            var threadAndJobs = Console.ReadLine().Split(' ').Select(long.Parse).ToList();
+            var threadAndJobs = Console.ReadLine()?.Split(' ').Select(long.Parse).ToList();
             var threadsQuantity = threadAndJobs.First();
             var jobsQuantity = threadAndJobs.Last();
-            var jobsDuration = Console.ReadLine()?.Split(' ').Select(int.Parse).ToArray();
+            var jobsDuration = Console.ReadLine()?.Split(' ').Select(long.Parse).ToArray();
             Simulate(threadsQuantity, jobsDuration);
         }
 
-        private static void Simulate(long threadsQuantity, int[] jobsDuration)
+        private static void Simulate(long threadsQuantity, long[] jobsDuration)
         {
-            //var freeThreads = new MyPriorityQueue(threadsQuantity);
-            //var busyThreads = new MyPriorityQueue(threadsQuantity);
             var threads = new MyPriorityQueue(threadsQuantity);
-            var jobs = new Queue<int>(jobsDuration);
-
-            while(jobs.Any())
+            var jobs = new Queue<long>(jobsDuration);
+            while (jobs.Any())
             {
                 var newJobDuration = jobs.Dequeue();
                 var activeThread = threads.GetThread();
                 Console.WriteLine($"{activeThread.Index} {activeThread.ReleaseTime}");
-                activeThread.ReleaseTime = newJobDuration;
+                activeThread.ReleaseTime += newJobDuration;
                 threads.SiftDown(0);
             }
         }
 
-
-        //todo: one queue; priority counts as sum of index and release time;
-        //todo: add logics for comparison (at first release times, if equal indexes)
         public class MyPriorityQueue
         {
             private long _size;
@@ -49,7 +37,7 @@ namespace Heap
             public MyPriorityQueue(long size)
             {
                 _heap = new MyThread[size];
-                for(var i = 0; i > size; i++)
+                for (var i = 0; i < size; i++)
                 {
                     _heap[i] = new MyThread(i);
                 }
@@ -70,11 +58,8 @@ namespace Heap
                         return;
                     }
 
-                    //change comparison
-                    if (_heap[parentIndex].CountPriority() > _heap[i].CountPriority())
+                    if (_heap[parentIndex] > _heap[i])
                     {
-                        SwapCounter++;
-                        //StringsToPrint2.AppendLine($"{parentIndex} {i}");
                         var temp = _heap[parentIndex];
                         _heap[parentIndex] = _heap[i];
                         _heap[i] = temp;
@@ -92,23 +77,19 @@ namespace Heap
                 {
                     var minIndex = i;
                     var l = GetLeftChildIndex(i);
-                    //change comparison
-                    if (l < _heap.Length && _heap[l].CountPriority() < _heap[minIndex].CountPriority())
+                    if (l < _heap.Length && _heap[l] < _heap[minIndex])
                     {
                         minIndex = l;
                     }
 
                     var r = GetRightChildIndex(i);
-                    //change comparison
-                    if (r < _heap.Length && _heap[r].CountPriority() < _heap[minIndex].CountPriority())
+                    if (r < _heap.Length && _heap[r] < _heap[minIndex])
                     {
                         minIndex = r;
                     }
 
                     if (minIndex != i)
                     {
-                        SwapCounter++;
-                        StringsToPrint2.AppendLine($"{minIndex} {i}");
                         var temp = _heap[minIndex];
                         _heap[minIndex] = _heap[i];
                         _heap[i] = temp;
@@ -144,48 +125,36 @@ namespace Heap
 
                 return -1;
             }
-
-
-            //private bool IsHeap()
-            //{
-            //    var elementsQuantity = _heap.Length;
-            //    for (var i = 0; i < elementsQuantity; i++)
-            //    {
-            //        var l = 2 * i + 1;
-            //        if (l <= elementsQuantity - 1)
-            //        {
-            //            if (_heap[i] > _heap[l])
-            //            {
-            //                return false;
-            //            }
-            //        }
-
-            //        var r = l + 1;
-            //        if (r <= elementsQuantity - 1)
-            //        {
-            //            if (_heap[i] > _heap[r])
-            //            {
-            //                return false;
-            //            }
-            //        }
-            //    }
-
-            //    return true;
-            //}
         }
 
         public class MyThread
         {
-            public MyThread(int index)
+            public MyThread(long index)
             {
                 Index = index;
             }
-            public int Index { get; set; }
-            public int ReleaseTime { get; set; }
 
-            public int CountPriority()
+            public long Index { get; set; }
+            public long ReleaseTime { get; set; }
+
+            public static bool operator <(MyThread mt1, MyThread mt2)
             {
-                return Index + ReleaseTime;
+                if (mt1.ReleaseTime == mt2.ReleaseTime)
+                {
+                    return mt1.Index < mt2.Index;
+                }
+
+                return mt1.ReleaseTime < mt2.ReleaseTime;
+            }
+
+            public static bool operator >(MyThread mt1, MyThread mt2)
+            {
+                if (mt1.ReleaseTime == mt2.ReleaseTime)
+                {
+                    return mt1.Index > mt2.Index;
+                }
+
+                return mt1.ReleaseTime > mt2.ReleaseTime;
             }
         }
     }
